@@ -1,70 +1,48 @@
+
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Heart, ShoppingBag, Star, Eye } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  original_price: number;
+  rating: number;
+  reviews_count: number;
+  category: string;
+  colors: string[];
+  is_new: boolean;
+  is_bestseller: boolean;
+  images: string[];
+}
 
 const FeaturedProducts = () => {
-  const products = [
-    {
-      id: 1,
-      name: "Royal Banarasi Silk Saree",
-      price: 15999,
-      originalPrice: 19999,
-      rating: 4.8,
-      reviews: 127,
-      category: "Wedding",
-      colors: ["burgundy", "gold", "emerald"],
-      isNew: true,
-      isBestseller: false,
-      image: "banarasi-silk"
+  const navigate = useNavigate();
+
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: ['featured-products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, price, original_price, rating, reviews_count, category, colors, is_new, is_bestseller, images')
+        .limit(4);
+      
+      if (error) throw error;
+      return data as Product[];
     },
-    {
-      id: 2,
-      name: "Designer Georgette Saree",
-      price: 8999,
-      originalPrice: 11999,
-      rating: 4.6,
-      reviews: 89,
-      category: "Party",
-      colors: ["rose", "royal-blue", "saffron"],
-      isNew: false,
-      isBestseller: true,
-      image: "georgette-designer"
-    },
-    {
-      id: 3,
-      name: "Traditional Cotton Saree",
-      price: 3999,
-      originalPrice: 5999,
-      rating: 4.7,
-      reviews: 203,
-      category: "Casual",
-      colors: ["emerald", "burgundy", "saffron"],
-      isNew: false,
-      isBestseller: false,
-      image: "cotton-traditional"
-    },
-    {
-      id: 4,
-      name: "Kanjivaram Silk Masterpiece",
-      price: 22999,
-      originalPrice: 27999,
-      rating: 4.9,
-      reviews: 156,
-      category: "Bridal",
-      colors: ["gold", "burgundy", "royal-blue"],
-      isNew: true,
-      isBestseller: true,
-      image: "kanjivaram-silk"
-    }
-  ];
+  });
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-    }).format(price);
+    }).format(price / 100);
   };
 
   const getColorClass = (color: string) => {
@@ -74,10 +52,54 @@ const FeaturedProducts = () => {
       emerald: 'bg-saree-emerald',
       'royal-blue': 'bg-saree-royal-blue',
       saffron: 'bg-saree-saffron',
-      rose: 'bg-saree-rose'
+      rose: 'bg-saree-rose',
+      purple: 'bg-purple-500',
+      silver: 'bg-gray-400',
+      black: 'bg-black',
+      blue: 'bg-blue-500',
+      green: 'bg-green-500',
+      red: 'bg-red-500',
+      cream: 'bg-amber-100',
+      pink: 'bg-pink-500',
+      orange: 'bg-orange-500'
     };
     return colorMap[color as keyof typeof colorMap] || 'bg-gray-400';
   };
+
+  const handleProductClick = (productId: string) => {
+    navigate(`/product/${productId}`);
+  };
+
+  if (isLoading) {
+    return (
+      <section className="py-16 bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+              <span className="gradient-primary bg-clip-text text-transparent">
+                Featured
+              </span>
+              <span className="text-foreground"> Collection</span>
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-0">
+                  <div className="aspect-[3/4] bg-muted"></div>
+                  <div className="p-4 space-y-3">
+                    <div className="h-4 bg-muted rounded"></div>
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-6 bg-muted rounded w-1/2"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 bg-background">
@@ -100,28 +122,37 @@ const FeaturedProducts = () => {
           {products.map((product, index) => (
             <Card 
               key={product.id} 
-              className="group hover-lift transition-smooth border-border overflow-hidden"
+              className="group hover-lift transition-smooth border-border overflow-hidden cursor-pointer"
               style={{ animationDelay: `${index * 0.1}s` }}
+              onClick={() => handleProductClick(product.id)}
             >
               <CardContent className="p-0">
                 {/* Image Container */}
                 <div className="relative aspect-[3/4] overflow-hidden">
-                  {/* Placeholder Image */}
-                  <div className="w-full h-full bg-gradient-primary flex items-center justify-center">
-                    <div className="text-center text-primary-foreground">
-                      <div className="mb-2 text-4xl">👗</div>
-                      <div className="text-sm font-medium">{product.image}</div>
+                  {/* Product Image */}
+                  {product.images && product.images.length > 0 ? (
+                    <img
+                      src={product.images[0]}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-primary flex items-center justify-center">
+                      <div className="text-center text-primary-foreground">
+                        <div className="mb-2 text-4xl">👗</div>
+                        <div className="text-sm font-medium">{product.category}</div>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Badges */}
                   <div className="absolute top-3 left-3 flex flex-col gap-2">
-                    {product.isNew && (
+                    {product.is_new && (
                       <Badge className="bg-saree-saffron text-primary-foreground">
                         New
                       </Badge>
                     )}
-                    {product.isBestseller && (
+                    {product.is_bestseller && (
                       <Badge className="bg-saree-burgundy text-primary-foreground">
                         Bestseller
                       </Badge>
@@ -130,10 +161,26 @@ const FeaturedProducts = () => {
 
                   {/* Action Buttons */}
                   <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-smooth">
-                    <Button size="icon" variant="secondary" className="h-8 w-8 hover-glow">
+                    <Button 
+                      size="icon" 
+                      variant="secondary" 
+                      className="h-8 w-8 hover-glow"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('Added to wishlist:', product.id);
+                      }}
+                    >
                       <Heart className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="secondary" className="h-8 w-8 hover-glow">
+                    <Button 
+                      size="icon" 
+                      variant="secondary" 
+                      className="h-8 w-8 hover-glow"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleProductClick(product.id);
+                      }}
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
                   </div>
@@ -141,7 +188,13 @@ const FeaturedProducts = () => {
                   {/* Overlay */}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-smooth">
                     <div className="absolute bottom-4 left-4 right-4">
-                      <Button className="w-full gradient-primary text-primary-foreground hover:scale-105 transition-smooth">
+                      <Button 
+                        className="w-full gradient-primary text-primary-foreground hover:scale-105 transition-smooth"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Add to cart:', product.id);
+                        }}
+                      >
                         <ShoppingBag className="mr-2 h-4 w-4" />
                         Add to Cart
                       </Button>
@@ -167,35 +220,46 @@ const FeaturedProducts = () => {
                   <div className="flex items-center gap-1 mb-3">
                     <Star className="h-4 w-4 fill-saree-gold text-saree-gold" />
                     <span className="text-sm font-medium">{product.rating}</span>
-                    <span className="text-xs text-muted-foreground">({product.reviews})</span>
+                    <span className="text-xs text-muted-foreground">({product.reviews_count})</span>
                   </div>
 
                   {/* Colors */}
-                  <div className="flex gap-1 mb-3">
-                    {product.colors.map((color) => (
-                      <div
-                        key={color}
-                        className={`w-4 h-4 rounded-full border-2 border-white shadow-sm ${getColorClass(color)}`}
-                      />
-                    ))}
-                  </div>
+                  {product.colors && product.colors.length > 0 && (
+                    <div className="flex gap-1 mb-3">
+                      {product.colors.slice(0, 4).map((color) => (
+                        <div
+                          key={color}
+                          className={`w-4 h-4 rounded-full border-2 border-white shadow-sm ${getColorClass(color)}`}
+                        />
+                      ))}
+                      {product.colors.length > 4 && (
+                        <div className="w-4 h-4 rounded-full bg-muted border-2 border-white shadow-sm flex items-center justify-center">
+                          <span className="text-xs text-muted-foreground">+</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Price */}
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold text-primary">
                       {formatPrice(product.price)}
                     </span>
-                    <span className="text-sm text-muted-foreground line-through">
-                      {formatPrice(product.originalPrice)}
-                    </span>
+                    {product.original_price && product.original_price > product.price && (
+                      <span className="text-sm text-muted-foreground line-through">
+                        {formatPrice(product.original_price)}
+                      </span>
+                    )}
                   </div>
 
                   {/* Discount */}
-                  <div className="mt-1">
-                    <span className="text-xs text-saree-saffron font-medium">
-                      {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
-                    </span>
-                  </div>
+                  {product.original_price && product.original_price > product.price && (
+                    <div className="mt-1">
+                      <span className="text-xs text-saree-saffron font-medium">
+                        {Math.round(((product.original_price - product.price) / product.original_price) * 100)}% OFF
+                      </span>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -208,6 +272,7 @@ const FeaturedProducts = () => {
             size="lg" 
             variant="outline"
             className="border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-smooth"
+            onClick={() => navigate('/sarees')}
           >
             View All Products
           </Button>

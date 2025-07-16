@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -6,132 +8,69 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, Search, Filter, Star, ShoppingBag } from 'lucide-react';
+import { Heart, Search, Star, ShoppingBag } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  original_price: number;
+  images: string[];
+  category: string;
+  fabric: string;
+  occasion: string;
+  rating: number;
+  reviews_count: number;
+  colors: string[];
+}
 
 const Sarees = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
 
-  // Mock saree data
-  const allSarees = [
-    {
-      id: 1,
-      name: 'Royal Silk Saree',
-      price: 15999,
-      originalPrice: 19999,
-      image: 'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=400',
-      category: 'silk',
-      fabric: 'Pure Silk',
-      occasion: 'wedding',
-      rating: 4.8,
-      reviews: 156,
-      colors: ['red', 'gold', 'maroon']
+  const { data: allProducts = [], isLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*');
+      
+      if (error) throw error;
+      return data as Product[];
     },
-    {
-      id: 2,
-      name: 'Cotton Handloom Saree',
-      price: 3999,
-      originalPrice: 4999,
-      image: 'https://images.unsplash.com/photo-1594736797933-d0ca6108ccb3?w=400',
-      category: 'cotton',
-      fabric: 'Cotton',
-      occasion: 'casual',
-      rating: 4.6,
-      reviews: 89,
-      colors: ['blue', 'white', 'green']
-    },
-    {
-      id: 3,
-      name: 'Designer Georgette Saree',
-      price: 8999,
-      originalPrice: 11999,
-      image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400',
-      category: 'georgette',
-      fabric: 'Georgette',
-      occasion: 'party',
-      rating: 4.7,
-      reviews: 124,
-      colors: ['pink', 'gold', 'cream']
-    },
-    {
-      id: 4,
-      name: 'Traditional Banarasi Saree',
-      price: 25999,
-      originalPrice: 29999,
-      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400',
-      category: 'banarasi',
-      fabric: 'Silk',
-      occasion: 'wedding',
-      rating: 4.9,
-      reviews: 203,
-      colors: ['gold', 'red', 'orange']
-    },
-    {
-      id: 5,
-      name: 'Contemporary Chiffon Saree',
-      price: 5999,
-      originalPrice: 7999,
-      image: 'https://images.unsplash.com/photo-1588070961754-2a5b2f7c57de?w=400',
-      category: 'chiffon',
-      fabric: 'Chiffon',
-      occasion: 'party',
-      rating: 4.5,
-      reviews: 67,
-      colors: ['purple', 'silver', 'black']
-    },
-    {
-      id: 6,
-      name: 'Embroidered Net Saree',
-      price: 12999,
-      originalPrice: 15999,
-      image: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400',
-      category: 'net',
-      fabric: 'Net',
-      occasion: 'party',
-      rating: 4.6,
-      reviews: 94,
-      colors: ['black', 'gold', 'silver']
-    }
-  ];
+  });
 
-  const [filteredSarees, setFilteredSarees] = useState(allSarees);
-
-  useEffect(() => {
-    // Get search query from URL params
-    const urlParams = new URLSearchParams(window.location.search);
-    const searchParam = urlParams.get('search');
-    if (searchParam) {
-      setSearchQuery(searchParam);
-    }
-  }, []);
-
-  useEffect(() => {
-    let filtered = allSarees;
+  // Filter and sort products
+  const filteredProducts = React.useMemo(() => {
+    let filtered = allProducts;
 
     // Filter by search query
     if (searchQuery) {
-      filtered = filtered.filter(saree => 
-        saree.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        saree.fabric.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        saree.category.toLowerCase().includes(searchQuery.toLowerCase())
+      filtered = filtered.filter(product => 
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.fabric?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     // Filter by category
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(saree => saree.category === selectedCategory);
+      filtered = filtered.filter(product => product.category === selectedCategory);
     }
 
     // Filter by price range
     if (priceRange !== 'all') {
       const [min, max] = priceRange.split('-').map(Number);
-      filtered = filtered.filter(saree => {
+      filtered = filtered.filter(product => {
         if (max) {
-          return saree.price >= min && saree.price <= max;
+          return product.price >= min * 100 && product.price <= max * 100;
         } else {
-          return saree.price >= min;
+          return product.price >= min * 100;
         }
       });
     }
@@ -145,18 +84,44 @@ const Sarees = () => {
         filtered.sort((a, b) => b.price - a.price);
         break;
       case 'rating':
-        filtered.sort((a, b) => b.rating - a.rating);
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
       case 'newest':
-        filtered.sort((a, b) => b.id - a.id);
+        filtered.sort((a, b) => b.id.localeCompare(a.id));
         break;
       default:
         // Keep original order for 'featured'
         break;
     }
 
-    setFilteredSarees(filtered);
-  }, [searchQuery, selectedCategory, priceRange, sortBy]);
+    return filtered;
+  }, [allProducts, searchQuery, selectedCategory, priceRange, sortBy]);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+    }).format(price / 100);
+  };
+
+  const handleProductClick = (productId: string) => {
+    navigate(`/product/${productId}`);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading products...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -198,9 +163,8 @@ const Sarees = () => {
                 <SelectItem value="silk">Silk Sarees</SelectItem>
                 <SelectItem value="cotton">Cotton Sarees</SelectItem>
                 <SelectItem value="georgette">Georgette Sarees</SelectItem>
-                <SelectItem value="banarasi">Banarasi Sarees</SelectItem>
-                <SelectItem value="chiffon">Chiffon Sarees</SelectItem>
                 <SelectItem value="net">Net Sarees</SelectItem>
+                <SelectItem value="chiffon">Chiffon Sarees</SelectItem>
               </SelectContent>
             </Select>
 
@@ -237,50 +201,73 @@ const Sarees = () => {
         {/* Results */}
         <div className="mb-6">
           <p className="text-muted-foreground">
-            Showing {filteredSarees.length} of {allSarees.length} sarees
+            Showing {filteredProducts.length} of {allProducts.length} sarees
           </p>
         </div>
 
         {/* Products Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-          {filteredSarees.map((saree) => (
-            <Card key={saree.id} className="group hover:shadow-elegant transition-all duration-300 overflow-hidden">
+          {filteredProducts.map((product) => (
+            <Card 
+              key={product.id} 
+              className="group hover:shadow-elegant transition-all duration-300 overflow-hidden cursor-pointer"
+              onClick={() => handleProductClick(product.id)}
+            >
               <div className="relative overflow-hidden">
-                <img
-                  src={saree.image}
-                  alt={saree.name}
-                  className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
-                />
+                {product.images && product.images.length > 0 ? (
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="w-full h-64 bg-gradient-primary flex items-center justify-center">
+                    <div className="text-center text-primary-foreground">
+                      <div className="mb-2 text-4xl">👗</div>
+                      <div className="text-sm font-medium">{product.category}</div>
+                    </div>
+                  </div>
+                )}
                 <Button
                   size="icon"
                   variant="secondary"
                   className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log('Added to wishlist:', product.id);
+                  }}
                 >
                   <Heart className="h-4 w-4" />
                 </Button>
-                {saree.originalPrice > saree.price && (
+                {product.original_price && product.original_price > product.price && (
                   <Badge className="absolute top-2 left-2 bg-destructive">
-                    {Math.round((1 - saree.price / saree.originalPrice) * 100)}% OFF
+                    {Math.round((1 - product.price / product.original_price) * 100)}% OFF
                   </Badge>
                 )}
               </div>
               <CardContent className="p-4">
-                <h3 className="font-semibold text-lg mb-2 line-clamp-2">{saree.name}</h3>
-                <p className="text-sm text-muted-foreground mb-2">{saree.fabric}</p>
+                <h3 className="font-semibold text-lg mb-2 line-clamp-2">{product.name}</h3>
+                <p className="text-sm text-muted-foreground mb-2">{product.fabric}</p>
                 <div className="flex items-center gap-1 mb-2">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm font-medium">{saree.rating}</span>
-                  <span className="text-sm text-muted-foreground">({saree.reviews})</span>
+                  <span className="text-sm font-medium">{product.rating || 0}</span>
+                  <span className="text-sm text-muted-foreground">({product.reviews_count || 0})</span>
                 </div>
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="font-bold text-lg">₹{saree.price.toLocaleString()}</span>
-                  {saree.originalPrice > saree.price && (
+                  <span className="font-bold text-lg">{formatPrice(product.price)}</span>
+                  {product.original_price && product.original_price > product.price && (
                     <span className="text-sm text-muted-foreground line-through">
-                      ₹{saree.originalPrice.toLocaleString()}
+                      {formatPrice(product.original_price)}
                     </span>
                   )}
                 </div>
-                <Button className="w-full">
+                <Button 
+                  className="w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log('Add to cart:', product.id);
+                  }}
+                >
                   <ShoppingBag className="h-4 w-4 mr-2" />
                   Add to Cart
                 </Button>
@@ -289,7 +276,7 @@ const Sarees = () => {
           ))}
         </div>
 
-        {filteredSarees.length === 0 && (
+        {filteredProducts.length === 0 && (
           <div className="text-center py-12">
             <h3 className="text-xl font-semibold mb-2">No sarees found</h3>
             <p className="text-muted-foreground">Try adjusting your filters or search terms</p>
