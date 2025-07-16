@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Heart, Search, Star, ShoppingBag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useCart } from '@/contexts/CartContext';
+import { toast } from 'sonner';
 
 interface Product {
   id: string;
@@ -27,6 +30,7 @@ interface Product {
 
 const Sarees = () => {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -106,6 +110,32 @@ const Sarees = () => {
 
   const handleProductClick = (productId: string) => {
     navigate(`/product/${productId}`);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation();
+    
+    if (!product.colors || product.colors.length === 0) {
+      toast.error('Product has no color options available');
+      return;
+    }
+
+    // Use first available color and size
+    const defaultColor = product.colors[0];
+    const defaultSize = 'M'; // Default size
+
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      color: defaultColor,
+      size: defaultSize,
+      quantity: 1,
+      image: product.images?.[0]
+    });
+
+    toast.success('Added to cart!');
+    console.log('Add to cart:', product.id);
   };
 
   if (isLoading) {
@@ -263,10 +293,7 @@ const Sarees = () => {
                 </div>
                 <Button 
                   className="w-full"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log('Add to cart:', product.id);
-                  }}
+                  onClick={(e) => handleAddToCart(e, product)}
                 >
                   <ShoppingBag className="h-4 w-4 mr-2" />
                   Add to Cart

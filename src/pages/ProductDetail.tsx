@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Heart, ShoppingBag, Star, ArrowLeft, Share2, Truck, Shield, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useCart } from '@/contexts/CartContext';
 
 interface Product {
   id: string;
@@ -34,6 +35,7 @@ interface Product {
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
@@ -93,10 +95,22 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = () => {
+    if (!product) return;
+    
     if (!selectedColor || !selectedSize) {
       toast.error('Please select color and size');
       return;
     }
+    
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      color: selectedColor,
+      size: selectedSize,
+      quantity: quantity,
+      image: product.images?.[0]
+    });
     
     toast.success(`Added ${quantity} item(s) to cart!`);
     console.log('Added to cart:', {
@@ -108,10 +122,23 @@ const ProductDetail = () => {
   };
 
   const handleBuyNow = () => {
+    if (!product) return;
+    
     if (!selectedColor || !selectedSize) {
       toast.error('Please select color and size');
       return;
     }
+    
+    // Add to cart first
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      color: selectedColor,
+      size: selectedSize,
+      quantity: quantity,
+      image: product.images?.[0]
+    });
     
     toast.success('Proceeding to checkout...');
     console.log('Buy now:', {
