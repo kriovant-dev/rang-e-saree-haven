@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Heart, ShoppingBag, Star, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useCart } from '@/contexts/CartContext';
+import { toast } from 'sonner';
 
 interface Product {
   id: string;
@@ -24,6 +26,7 @@ interface Product {
 
 const FeaturedProducts = () => {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['featured-products'],
@@ -67,6 +70,39 @@ const FeaturedProducts = () => {
   };
 
   const handleProductClick = (productId: string) => {
+    navigate(`/product/${productId}`);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation();
+    
+    // Add to cart with default selections
+    const defaultColor = product.colors?.[0] || 'default';
+    const defaultSize = 'M';
+    
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      color: defaultColor,
+      size: defaultSize,
+      quantity: 1,
+      image: product.images?.[0]
+    });
+    
+    toast.success(`${product.name} added to cart!`);
+  };
+
+  const handleLike = (e: React.MouseEvent, productId: string) => {
+    e.stopPropagation();
+    // For now, just show a toast. In a real app, you'd save to user preferences/wishlist
+    toast.success('Added to wishlist!');
+    console.log('Liked product:', productId);
+  };
+
+  const handleQuickView = (e: React.MouseEvent, productId: string) => {
+    e.stopPropagation();
+    // Navigate to product detail page
     navigate(`/product/${productId}`);
   };
 
@@ -165,10 +201,7 @@ const FeaturedProducts = () => {
                       size="icon" 
                       variant="secondary" 
                       className="h-8 w-8 hover-glow"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log('Added to wishlist:', product.id);
-                      }}
+                      onClick={(e) => handleLike(e, product.id)}
                     >
                       <Heart className="h-4 w-4" />
                     </Button>
@@ -176,10 +209,7 @@ const FeaturedProducts = () => {
                       size="icon" 
                       variant="secondary" 
                       className="h-8 w-8 hover-glow"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleProductClick(product.id);
-                      }}
+                      onClick={(e) => handleQuickView(e, product.id)}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -190,10 +220,7 @@ const FeaturedProducts = () => {
                     <div className="absolute bottom-4 left-4 right-4">
                       <Button 
                         className="w-full gradient-primary text-primary-foreground hover:scale-105 transition-smooth"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log('Add to cart:', product.id);
-                        }}
+                        onClick={(e) => handleAddToCart(e, product)}
                       >
                         <ShoppingBag className="mr-2 h-4 w-4" />
                         Add to Cart
