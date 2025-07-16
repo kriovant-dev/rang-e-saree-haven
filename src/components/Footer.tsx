@@ -109,7 +109,7 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <div className="mb-6">
               <h2 className="font-display text-2xl font-bold mb-2">
-                Rang-e-Saree Haven
+                Vedha Trendz
               </h2>
               <p className="text-primary-foreground/80 leading-relaxed">
                 Your trusted destination for authentic, handcrafted sarees that celebrate the rich heritage of Indian textiles. Quality, tradition, and elegance in every thread.
