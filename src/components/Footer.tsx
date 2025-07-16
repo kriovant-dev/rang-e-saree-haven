@@ -56,7 +56,7 @@ const Footer = () => {
   const paymentMethods = ["visa", "mastercard", "paypal", "razorpay", "upi"];
   const socialLinks = [
     { icon: Facebook, href: "#", label: "Facebook" },
-    { icon: Instagram, href: "#", label: "Instagram" },
+    { icon: Instagram, href: "https://www.instagram.com/vedhatrendz/", label: "Instagram" },
     { icon: Twitter, href: "#", label: "Twitter" },
     { icon: Youtube, href: "#", label: "YouTube" }
   ];
