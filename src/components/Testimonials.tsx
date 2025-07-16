@@ -27,7 +27,7 @@ const Testimonials = () => {
       name: "Meera Patel",
       location: "Ahmedabad, Gujarat",
       rating: 5,
-      review: "I've been buying sarees from Rang-e-Saree Haven for over a year now. Their collection is always fresh and the quality is consistent. Highly recommended for authentic Indian wear.",
+      review: "I've been buying sarees from Vedhatrendz Haven for over a year now. Their collection is always fresh and the quality is consistent. Highly recommended for authentic Indian wear.",
       saree: "Cotton Handloom",
       image: "customer3"
     },
