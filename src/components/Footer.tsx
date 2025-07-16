@@ -149,6 +149,7 @@ const Footer = () => {
                     size="icon"
                     className="h-9 w-9 bg-primary-foreground/10 hover:bg-saree-gold hover:text-primary transition-smooth"
                     aria-label={social.label}
+                    onClick={() => window.open(social.href, "_blank", "noopener,noreferrer")}
                   >
                     <IconComponent className="h-4 w-4" />
                   </Button>
