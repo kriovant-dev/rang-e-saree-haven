@@ -49,12 +49,12 @@ const Contact = () => {
     {
       icon: MapPin,
       title: 'Visit Our Store',
-      details: ['123 Fashion Street, Textile District', 'Mumbai, Maharashtra 400001', 'India']
+      details: ['Somewhere in the World', 'Gujarat 510000', 'India']
     },
     {
       icon: Phone,
       title: 'Call Us',
-      details: ['+91 98765 43210', '+91 87654 32109', 'Mon-Sat: 9AM-8PM']
+      details: ['+91 XXXXX XXXXX', '+91 XXXXX XXXXX', 'Mon-Sat: 9AM-8PM']
     },
     {
       icon: Mail,
@@ -267,8 +267,8 @@ const Contact = () => {
               <MapPin className="h-12 w-12 text-primary mx-auto mb-4" />
               <h3 className="font-semibold text-xl mb-2">VedhaTrendz Flagship Store</h3>
               <p className="text-muted-foreground mb-4">
-                123 Fashion Street, Textile District<br />
-                Mumbai, Maharashtra 400001, India
+                Somewhere in India<br />
+                Gujarat ,India 530001
               </p>
               <Badge variant="outline" className="mb-4">Open Today: 9:00 AM - 8:00 PM</Badge>
               <p className="text-sm text-muted-foreground">
