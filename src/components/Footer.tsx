@@ -121,19 +121,19 @@ const Footer = () => {
               <div className="flex items-center gap-3">
                 <MapPin className="h-4 w-4 text-saree-gold" />
                 <span className="text-sm text-primary-foreground/80">
-                  123 Fashion Street, Mumbai, Maharashtra 400001
+                  Somewhere in the world, Gujarat, India 530001
                 </span>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="h-4 w-4 text-saree-gold" />
                 <span className="text-sm text-primary-foreground/80">
-                  +91 98765 43210
+                  +91 XXXXX XXXXX 
                 </span>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="h-4 w-4 text-saree-gold" />
                 <span className="text-sm text-primary-foreground/80">
-                  hello@sareeHaven.com
+                  info@vedhatrendz.com
                 </span>
               </div>
             </div>
@@ -214,7 +214,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-sm text-primary-foreground/60">
-            © 2024 Rang-e-Saree Haven. All rights reserved. | Made with ❤️ in India
+            © 2025 VedhaTrendz. All rights reserved. | Made with ❤️ in India
           </div>
           
           <div className="flex items-center gap-4">
