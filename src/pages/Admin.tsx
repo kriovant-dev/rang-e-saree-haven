@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,8 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { toast } from 'sonner';
-import { Search, Filter, Package, Eye, Edit, Calendar, DollarSign, TrendingUp, Users } from 'lucide-react';
+import { Search, Filter, Package, Eye, Edit, Calendar, DollarSign, TrendingUp, Users, LogOut } from 'lucide-react';
 import { format } from 'date-fns';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
+import AdminLogin from '@/components/AdminLogin';
 
 interface Order {
   id: string;
@@ -34,6 +35,7 @@ interface Order {
 }
 
 const Admin = () => {
+  const { isAuthenticated, isLoading: authLoading, login, logout } = useAdminAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
@@ -136,6 +138,21 @@ const Admin = () => {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <AdminLogin onLoginSuccess={login} />;
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -150,10 +167,16 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage orders and monitor your ecommerce store</p>
+        {/* Header with logout */}
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Manage orders and monitor your ecommerce store</p>
+          </div>
+          <Button variant="outline" onClick={logout} className="flex items-center gap-2">
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
         </div>
 
         {/* Statistics Cards */}
