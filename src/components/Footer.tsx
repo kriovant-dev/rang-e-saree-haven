@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,7 +49,8 @@ const Footer = () => {
         { label: "Sustainability", href: "/sustainability" },
         { label: "Quality Promise", href: "/quality" },
         { label: "Press & Media", href: "/press" },
-        { label: "Careers", href: "/careers" }
+        { label: "Careers", href: "/careers" },
+        { label: "Admin Panel", href: "/admin" }
       ]
     }
   ];

@@ -12,6 +12,7 @@ const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Sarees = lazy(() => import("./pages/Sarees"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Admin = lazy(() => import("./pages/Admin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -54,6 +55,14 @@ const App = () => (
               element={
                 <Suspense fallback={<div>Loading...</div>}>
                   <ProductDetail />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <Suspense fallback={<div>Loading...</div>}>
+                  <Admin />
                 </Suspense>
               }
             />
