@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { firebase } from '@/integrations/firebase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -50,10 +50,11 @@ const Admin = () => {
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['admin-orders'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await firebase
         .from('orders')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .execute();
       
       if (error) throw error;
       return data as Order[];
@@ -64,22 +65,24 @@ const Admin = () => {
   const { data: productsCount = 0 } = useQuery({
     queryKey: ['admin-products-count'],
     queryFn: async () => {
-      const { count, error } = await supabase
+      const { data, error } = await firebase
         .from('products')
-        .select('*', { count: 'exact', head: true });
+        .select('*')
+        .execute();
       
       if (error) throw error;
-      return count || 0;
+      return data ? data.length : 0;
     },
   });
 
   // Update order mutation
   const updateOrderMutation = useMutation({
     mutationFn: async ({ orderId, updates }: { orderId: string; updates: Partial<Order> }) => {
-      const { error } = await supabase
+      const { error } = await firebase
         .from('orders')
         .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', orderId);
+        .eq('id', orderId)
+        .execute();
       
       if (error) throw error;
     },

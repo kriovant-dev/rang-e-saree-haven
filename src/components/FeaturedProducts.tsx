@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Heart, ShoppingBag, Star, Eye } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { firebase } from '@/integrations/firebase/client';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
 
@@ -31,10 +31,11 @@ const FeaturedProducts = () => {
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['featured-products'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await firebase
         .from('products')
         .select('id, name, price, original_price, rating, reviews_count, category, colors, is_new, is_bestseller, images')
-        .limit(4);
+        .limit(4)
+        .execute();
       
       if (error) throw error;
       return data as Product[];

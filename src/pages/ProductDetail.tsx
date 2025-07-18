@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Heart, ShoppingBag, Star, ArrowLeft, Share2, Truck, Shield, RotateCcw } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { firebase } from '@/integrations/firebase/client';
 import { toast } from 'sonner';
 import { useCart } from '@/contexts/CartContext';
 
@@ -44,7 +44,7 @@ const ProductDetail = () => {
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await firebase
         .from('products')
         .select('*')
         .eq('id', id)

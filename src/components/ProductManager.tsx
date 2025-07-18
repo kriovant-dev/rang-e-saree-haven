@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { firebase } from '@/integrations/firebase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -91,10 +91,11 @@ const ProductManager = () => {
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['admin-products'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await firebase
         .from('products')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .execute();
       
       if (error) throw error;
       return data as Product[];
@@ -104,11 +105,18 @@ const ProductManager = () => {
   // Create product mutation
   const createProductMutation = useMutation({
     mutationFn: async (productData: CreateProductData) => {
-      const { error } = await supabase
+      console.log('Creating product with data:', productData);
+      const { data, error } = await firebase
         .from('products')
-        .insert([productData]);
+        .insert(productData) // Remove array wrapper - Firebase client handles this
+        .execute();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Product creation error:', error);
+        throw error;
+      }
+      console.log('Product created successfully:', data);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
@@ -126,10 +134,11 @@ const ProductManager = () => {
   // Update product mutation
   const updateProductMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Product> }) => {
-      const { error } = await supabase
+      const { error } = await firebase
         .from('products')
         .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', id);
+        .eq('id', id)
+        .execute();
       
       if (error) throw error;
     },
@@ -150,10 +159,11 @@ const ProductManager = () => {
   // Delete product mutation
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: string) => {
-      const { error } = await supabase
+      const { error } = await firebase
         .from('products')
         .delete()
-        .eq('id', productId);
+        .eq('id', productId)
+        .execute();
       
       if (error) throw error;
     },

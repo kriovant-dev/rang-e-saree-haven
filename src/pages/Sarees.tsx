@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Heart, Search, Star, ShoppingBag } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { firebase } from '@/integrations/firebase/client';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
 
@@ -40,9 +40,10 @@ const Sarees = () => {
   const { data: allProducts = [], isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await firebase
         .from('products')
-        .select('*');
+        .select('*')
+        .execute();
       
       if (error) throw error;
       return data as Product[];
