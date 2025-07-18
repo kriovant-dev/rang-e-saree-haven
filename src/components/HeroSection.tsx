@@ -1,8 +1,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Star, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-subtle">
       {/* Background Pattern */}
@@ -55,6 +58,7 @@ const HeroSection = () => {
               <Button 
                 size="lg" 
                 className="gradient-primary text-primary-foreground hover:scale-105 transition-smooth shadow-elegant group"
+                onClick={() => navigate('/sarees')}
               >
                 Explore Collection
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-smooth" />
@@ -63,6 +67,7 @@ const HeroSection = () => {
                 variant="outline" 
                 size="lg"
                 className="border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-smooth"
+                onClick={() => navigate('/sarees')}
               >
                 View Catalog
               </Button>

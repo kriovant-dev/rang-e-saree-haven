@@ -263,6 +263,3 @@ export const firebase = {
     })
   })
 };
-
-// Export a default instance for easier use
-export const firebaseClient = firebaseClient_instance;

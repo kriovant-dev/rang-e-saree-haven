@@ -16,17 +16,21 @@ import {
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 import CartDrawer from '@/components/CartDrawer';
 
 const Navbar = () => {
   const { getTotalItems } = useCart();
+  const { getTotalItems: getWishlistCount } = useWishlist();
+  const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const cartCount = getTotalItems();
+  const wishlistCount = getWishlistCount();
 
   const navigationItems = [
     { label: 'Home', href: '/', icon: Home },
@@ -97,12 +101,30 @@ const Navbar = () => {
               </Button>
 
               {/* Wishlist */}
-              <Button variant="ghost" size="icon" className="hover-glow">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="relative hover-glow"
+                onClick={() => navigate('/wishlist')}
+              >
                 <Heart className="h-5 w-5" />
+                {wishlistCount > 0 && (
+                  <Badge 
+                    variant="secondary" 
+                    className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white animate-pulse-slow"
+                  >
+                    {wishlistCount}
+                  </Badge>
+                )}
               </Button>
 
               {/* Profile */}
-              <Button variant="ghost" size="icon" className="hover-glow">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="hover-glow"
+                onClick={() => navigate('/profile')}
+              >
                 <User className="h-5 w-5" />
               </Button>
 

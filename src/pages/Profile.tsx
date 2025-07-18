@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -7,11 +8,13 @@ import { Label } from '../components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
-import { User, Phone, Mail, MapPin, Package, Heart, ShoppingCart, Edit2, Save, X } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Package, Heart, ShoppingCart, Edit2, Save, X, ArrowLeft, Home } from 'lucide-react';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useCart } from '../contexts/CartContext';
-import { FirebaseClient } from '../integrations/firebase/client';
+import { firebase } from '../integrations/firebase/client';
+import PhoneAuth from '../components/PhoneAuth';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface UserProfile {
   name: string;
@@ -35,10 +38,12 @@ interface Order {
 }
 
 const Profile: React.FC = () => {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const { getTotalItems: getWishlistCount } = useWishlist();
   const { getTotalItems: getCartCount } = useCart();
   
+  const [showPhoneAuth, setShowPhoneAuth] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({
     name: '',
     email: '',
@@ -65,9 +70,11 @@ const Profile: React.FC = () => {
   const loadUserProfile = async () => {
     try {
       // Try to load existing profile
-      const { data } = await FirebaseClient.getSingle('user_profiles', [
-        { field: 'user_id', operator: '==', value: user?.uid }
-      ]);
+      const { data } = await firebase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user?.uid)
+        .single();
       
       if (data) {
         setProfile(data);
@@ -92,11 +99,11 @@ const Profile: React.FC = () => {
 
   const loadUserOrders = async () => {
     try {
-      const { data } = await firebaseClient
+      const { data } = await firebase
         .from('orders')
         .select('*')
         .eq('user_phone', user?.phoneNumber)
-        .order('created_at', { ascending: false });
+        .execute();
       
       setOrders(data || []);
     } catch (error) {
@@ -114,30 +121,45 @@ const Profile: React.FC = () => {
       };
 
       // Check if profile exists
-      const { data: existing } = await firebaseClient
+      const { data: existing } = await firebase
         .from('user_profiles')
-        .select('id')
+        .select('*')
         .eq('user_id', user?.uid)
         .single();
 
       if (existing) {
-        await firebaseClient
+        await firebase
           .from('user_profiles')
           .update(profileData)
-          .eq('user_id', user?.uid);
+          .eq('user_id', user?.uid)
+          .execute();
+        toast.success('Profile updated successfully!');
       } else {
-        await firebaseClient
+        await firebase
           .from('user_profiles')
           .insert([{
             ...profileData,
             created_at: new Date().toISOString()
-          }]);
+          }])
+          .execute();
+        toast.success('Profile created successfully!');
       }
 
       setIsEditing(false);
     } catch (error) {
       console.error('Error saving profile:', error);
+      toast.error('Failed to save profile. Please try again.');
     }
+  };
+
+  const handleAuthSuccess = (authUser: any) => {
+    toast.success(`Welcome ${authUser.phoneNumber}! You can now manage your profile.`);
+    setShowPhoneAuth(false);
+    // Reload profile data after authentication
+    setTimeout(() => {
+      loadUserProfile();
+      loadUserOrders();
+    }, 1000);
   };
 
   const getOrderStatusColor = (status: string) => {
@@ -157,20 +179,82 @@ const Profile: React.FC = () => {
     }
   };
 
-  if (!user) {
+  if (authLoading) {
     return (
       <div className="container mx-auto px-4 py-8 min-h-screen">
         <div className="text-center">
-          <User className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-          <h1 className="text-3xl font-bold text-saree-primary mb-2">Please Login</h1>
-          <p className="text-gray-600 mb-6">You need to be logged in to view your profile.</p>
-          <Link to="/admin">
-            <Button className="bg-saree-accent hover:bg-saree-accent/90">
-              Login
-            </Button>
-          </Link>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-saree-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <div className="container mx-auto px-4 py-8 min-h-screen">
+          <div className="max-w-md mx-auto text-center">
+            <div className="bg-gradient-to-r from-saree-primary to-saree-accent text-white rounded-lg p-8 mb-8">
+              <User className="mx-auto h-16 w-16 mb-4" />
+              <h1 className="text-2xl font-bold mb-2">Welcome to Your Profile</h1>
+              <p className="opacity-90">Sign in to manage your account, orders, and preferences</p>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-center gap-2">
+                  <Phone className="h-5 w-5" />
+                  Phone Authentication Required
+                </CardTitle>
+                <CardDescription>
+                  Please verify your phone number to access your profile and order history
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-4 w-4" />
+                    <span>View your order history</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Heart className="h-4 w-4" />
+                    <span>Manage your wishlist</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span>Update personal information</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    <span>Save shipping addresses</span>
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <Button 
+                  onClick={() => setShowPhoneAuth(true)} 
+                  className="w-full bg-saree-accent hover:bg-saree-accent/90"
+                >
+                  <Phone className="mr-2 h-4 w-4" />
+                  Sign In with Phone Number
+                </Button>
+                
+                <p className="text-xs text-gray-500">
+                  We'll send you a verification code to confirm your phone number
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <PhoneAuth
+          isOpen={showPhoneAuth}
+          onClose={() => setShowPhoneAuth(false)}
+          onSuccess={handleAuthSuccess}
+        />
+      </>
     );
   }
 
@@ -188,6 +272,29 @@ const Profile: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8 min-h-screen">
       <div className="max-w-4xl mx-auto">
+        {/* Navigation Header */}
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 mb-4"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <nav className="flex items-center text-sm text-gray-600 mb-4">
+            <button
+              onClick={() => navigate('/')}
+              className="hover:text-saree-primary transition-colors"
+            >
+              Home
+            </button>
+            <span className="mx-2">/</span>
+            <span className="text-saree-primary font-medium">Profile</span>
+          </nav>
+        </div>
+        
         {/* Profile Header */}
         <div className="bg-gradient-to-r from-saree-primary to-saree-accent text-white rounded-lg p-6 mb-8">
           <div className="flex items-center justify-between">

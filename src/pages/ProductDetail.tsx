@@ -12,6 +12,7 @@ import { Heart, ShoppingBag, Star, ArrowLeft, Share2, Truck, Shield, RotateCcw }
 import { firebase } from '@/integrations/firebase/client';
 import { toast } from 'sonner';
 import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 
 interface Product {
   id: string;
@@ -36,6 +37,7 @@ const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
@@ -149,6 +151,29 @@ const ProductDetail = () => {
     });
   };
 
+  const handleWishlistToggle = () => {
+    if (!product) return;
+    
+    const isWishlisted = isInWishlist(product.id);
+    
+    if (isWishlisted) {
+      removeFromWishlist(product.id);
+      toast.success('Removed from wishlist');
+    } else {
+      addToWishlist({
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        originalPrice: product.original_price,
+        image: product.images?.[0] || '',
+        category: product.category,
+        colors: product.colors,
+        sizes: product.sizes
+      });
+      toast.success('Added to wishlist');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -192,6 +217,18 @@ const ProductDetail = () => {
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Back Button */}
+        <div className="mb-4">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        </div>
+
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
           <button onClick={() => navigate('/')} className="hover:text-primary">Home</button>
@@ -256,8 +293,21 @@ const ProductDetail = () => {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button size="icon" variant="outline">
-                    <Heart className="h-4 w-4" />
+                  <Button 
+                    size="icon" 
+                    variant="outline"
+                    onClick={handleWishlistToggle}
+                    className={`${
+                      product && isInWishlist(product.id) 
+                        ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100' 
+                        : 'hover:bg-red-50 hover:border-red-200 hover:text-red-600'
+                    }`}
+                  >
+                    <Heart 
+                      className={`h-4 w-4 ${
+                        product && isInWishlist(product.id) ? 'fill-current' : ''
+                      }`} 
+                    />
                   </Button>
                   <Button size="icon" variant="outline">
                     <Share2 className="h-4 w-4" />

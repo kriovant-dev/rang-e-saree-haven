@@ -37,6 +37,41 @@ const Sarees = () => {
   const [priceRange, setPriceRange] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
 
+  // Handle URL parameters on component mount and when searchParams change
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    const searchParam = searchParams.get('search');
+    
+    if (categoryParam) {
+      // Map common category names to match the actual category values in your database
+      const categoryMap: { [key: string]: string } = {
+        'wedding sarees': 'Wedding',
+        'silk sarees': 'Silk',
+        'cotton sarees': 'Cotton',
+        'designer sarees': 'Designer',
+        'festive sarees': 'Festive',
+        'office wear': 'Office',
+        'party wear': 'Party',
+        'casual': 'Casual'
+      };
+      
+      const mappedCategory = categoryMap[categoryParam.toLowerCase()] || categoryParam;
+      setSelectedCategory(mappedCategory);
+    }
+    
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    }
+
+    // Scroll to top when parameters change (especially for category navigation)
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [searchParams]);
+
+  // Scroll to top on initial page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const { data: allProducts = [], isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {

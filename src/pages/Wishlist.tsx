@@ -1,15 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { Heart, ShoppingCart, Trash2 } from 'lucide-react';
+import { Heart, ShoppingCart, Trash2, Phone, User, ArrowLeft, Home } from 'lucide-react';
+import PhoneAuth from '../components/PhoneAuth';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const Wishlist: React.FC = () => {
+  const navigate = useNavigate();
   const { items, removeFromWishlist, clearWishlist, getTotalItems } = useWishlist();
   const { addToCart } = useCart();
+  const { user, loading: authLoading } = useAuth();
+  const [showPhoneAuth, setShowPhoneAuth] = useState(false);
 
   const handleAddToCart = (item: any) => {
     const cartItem = {
@@ -22,7 +29,80 @@ const Wishlist: React.FC = () => {
       image: item.image
     };
     addToCart(cartItem);
+    toast.success(`${item.name} added to cart!`);
   };
+
+  const handleAuthSuccess = (authUser: any) => {
+    toast.success(`Welcome ${authUser.phoneNumber}! You can now manage your wishlist.`);
+    setShowPhoneAuth(false);
+  };
+
+  if (authLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-saree-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <div className="container mx-auto px-4 py-8 min-h-screen">
+          <div className="max-w-md mx-auto text-center">
+            <div className="bg-gradient-to-r from-saree-primary to-saree-accent text-white rounded-lg p-8 mb-8">
+              <Heart className="mx-auto h-16 w-16 mb-4" />
+              <h1 className="text-2xl font-bold mb-2">Your Wishlist</h1>
+              <p className="opacity-90">Save your favorite sarees for later</p>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-center gap-2">
+                  <Phone className="h-5 w-5" />
+                  Sign In to View Wishlist
+                </CardTitle>
+                <CardDescription>
+                  Please verify your phone number to access your saved items
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-sm text-gray-600 space-y-2">
+                  <p>🤍 Save items you love</p>
+                  <p>📱 Access from any device</p>
+                  <p>🛒 Quick add to cart</p>
+                  <p>🔄 Sync across sessions</p>
+                </div>
+                
+                <Button 
+                  onClick={() => setShowPhoneAuth(true)} 
+                  className="w-full bg-saree-accent hover:bg-saree-accent/90"
+                >
+                  <Phone className="mr-2 h-4 w-4" />
+                  Sign In with Phone Number
+                </Button>
+                
+                <div className="text-center">
+                  <Link to="/sarees" className="text-sm text-saree-primary hover:underline">
+                    Continue browsing sarees →
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <PhoneAuth
+          isOpen={showPhoneAuth}
+          onClose={() => setShowPhoneAuth(false)}
+          onSuccess={handleAuthSuccess}
+        />
+      </>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -43,6 +123,29 @@ const Wishlist: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 min-h-screen">
+      {/* Navigation Header */}
+      <div className="mb-6">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+        <nav className="flex items-center text-sm text-gray-600 mb-4">
+          <button
+            onClick={() => navigate('/')}
+            className="hover:text-saree-primary transition-colors"
+          >
+            Home
+          </button>
+          <span className="mx-2">/</span>
+          <span className="text-saree-primary font-medium">Wishlist</span>
+        </nav>
+      </div>
+      
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-saree-primary mb-2">My Wishlist</h1>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { firebase } from '@/integrations/firebase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Search, Filter, Package, Eye, Edit, Calendar, DollarSign, TrendingUp, Users, LogOut, ShoppingBag } from 'lucide-react';
+import { Search, Filter, Package, Eye, Edit, Calendar, DollarSign, TrendingUp, Users, LogOut, ShoppingBag, ArrowLeft, Home } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import AdminLogin from '@/components/AdminLogin';
@@ -37,6 +38,7 @@ interface Order {
 }
 
 const Admin = () => {
+  const navigate = useNavigate();
   const { isAuthenticated, isLoading: authLoading, login, logout } = useAdminAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -188,9 +190,20 @@ const Admin = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header with logout */}
         <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage orders, products, and monitor your ecommerce store</p>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2"
+            >
+              <Home className="h-4 w-4" />
+              Home
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
+              <p className="text-muted-foreground">Manage orders, products, and monitor your ecommerce store</p>
+            </div>
           </div>
           <Button variant="outline" onClick={logout} className="flex items-center gap-2">
             <LogOut className="h-4 w-4" />

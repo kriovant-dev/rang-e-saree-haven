@@ -1,8 +1,16 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Categories = () => {
+  const navigate = useNavigate();
+
+  const handleCategoryClick = (categoryName: string) => {
+    // Navigate to sarees page with category filter
+    navigate(`/sarees?category=${encodeURIComponent(categoryName.toLowerCase())}`);
+  };
+
   const categories = [
     {
       id: 1,
@@ -77,6 +85,7 @@ const Categories = () => {
               key={category.id}
               className="group cursor-pointer border-border hover-lift transition-smooth overflow-hidden animate-fade-up"
               style={{ animationDelay: `${index * 0.1}s` }}
+              onClick={() => handleCategoryClick(category.name)}
             >
               <CardContent className="p-0">
                 <div className="relative">
