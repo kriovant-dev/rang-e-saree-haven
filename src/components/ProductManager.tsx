@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,6 +49,23 @@ interface ProductFormData {
   is_bestseller: boolean;
 }
 
+// Type for creating new products - only required fields
+interface CreateProductData {
+  name: string;
+  category: string;
+  price: number;
+  description?: string | null;
+  original_price?: number | null;
+  fabric?: string | null;
+  occasion?: string | null;
+  colors?: string[];
+  sizes?: string[];
+  images?: string[];
+  stock_quantity?: number | null;
+  is_new?: boolean | null;
+  is_bestseller?: boolean | null;
+}
+
 const ProductManager = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -87,7 +103,7 @@ const ProductManager = () => {
 
   // Create product mutation
   const createProductMutation = useMutation({
-    mutationFn: async (productData: Partial<Product>) => {
+    mutationFn: async (productData: CreateProductData) => {
       const { error } = await supabase
         .from('products')
         .insert([productData]);
@@ -193,12 +209,18 @@ const ProductManager = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const productData: Partial<Product> = {
+    // Ensure required fields are present for create operation
+    if (!formData.name.trim() || !formData.category || !formData.price) {
+      toast.error('Please fill in all required fields (Name, Category, Price)');
+      return;
+    }
+
+    const productData: CreateProductData = {
       name: formData.name,
-      description: formData.description || null,
-      price: Math.round(parseFloat(formData.price) * 100),
-      original_price: formData.original_price ? Math.round(parseFloat(formData.original_price) * 100) : null,
       category: formData.category,
+      price: Math.round(parseFloat(formData.price) * 100),
+      description: formData.description || null,
+      original_price: formData.original_price ? Math.round(parseFloat(formData.original_price) * 100) : null,
       fabric: formData.fabric || null,
       occasion: formData.occasion || null,
       colors: formData.colors.split(',').map(c => c.trim()).filter(c => c),
